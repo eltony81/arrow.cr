@@ -1,14 +1,10 @@
 name: arrow
-version: 0.1.0
+version: 1.0.0
 
 authors:
-  - your-name-here <your-email-here>
+  - Chris Zimmerman <chris-zimmerman@live.com>
+  - Crystal Data Contributors
 
-crystal: 1.2.1
+crystal: >= 1.0.0
 
 license: MIT
-
-dependencies:
-  gobject:
-    github: jhass/crystal-gobject
-    version: ~> 0.10.0

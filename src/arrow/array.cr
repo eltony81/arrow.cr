@@ -1,163 +1,108 @@
-# Copyright (c) 2021 Crystal Data Contributors
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to
-# the following conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Arrow Array wrappers using direct C bindings
 
-# Base `Arrow::Array` class.  Instances of this class cannot be indexed,
-# since the base class doesn't have a `value` method.
+struct PointerWrapper(T)
+  def initialize(@ptr : Pointer(T))
+  end
+  def to_unsafe : Pointer(T)
+    @ptr
+  end
+end
+
+class Arrow::Buffer
+  getter to_unsafe : LibArrowGlib::GArrowBuffer
+
+  def initialize(@to_unsafe : LibArrowGlib::GArrowBuffer)
+  end
+
+  def initialize(bytes : Bytes)
+    @to_unsafe = LibArrowGlib.garrow_buffer_new(bytes.to_unsafe, bytes.bytesize.to_i64)
+  end
+
+  def finalize
+    LibArrowGlib.g_object_unref(@to_unsafe)
+  end
+end
+
 class Arrow::Array
-  # Returns the value in an `Arrow::Array` at a given index, or `nil`
-  # if the element is null.  This method is only present on the base
-  # class to deal with compile time issues
-  #
-  # ## Arguments
-  #
-  # * i : `Int` - Index of element to return
-  #
-  # ## Examples
-  #
-  # ```
-  # a = Arrow::ArrayBuilder.build([1, 2, 3])
-  # i = Arrow::Int32Array.cast(a)
-  # i.value(0) # => 1
-  # ```
-  def value(i : Int); end
+  getter to_unsafe : LibArrowGlib::GArrowArray
 
-  # Returns the value in an `Arrow::Array` at a given index, or `nil`
-  # if the element is null.  This method is only present on the base
-  # class to deal with compile time issues
-  #
-  # ## Arguments
-  #
-  # * i : `Int` - Index of element to return
-  #
-  # ## Examples
-  #
-  # ```
-  # a = Arrow::ArrayBuilder.build([1, nil, 3])
-  # i = Arrow::Int32Array.cast(a)
-  # i[2] # => 3
-  # i[1] # => nil
-  # ```
-  def [](i : Int)
-    i += self.length if i < 0
-    return nil if i < 0 || i >= self.length
-    if self.null?(i)
-      nil
-    else
-      value(i)
-    end
+  def initialize(@to_unsafe : LibArrowGlib::GArrowArray)
   end
 
-  # Yields the elements of an `Arrow::Array`.
-  #
-  # ## Examples
-  #
-  # ```
-  # a = Arrow::ArrayBuilder.build([1, nil, 3])
-  # i = Arrow::Int32Array.cast(a)
-  # i.each do |el|
-  #   puts el
-  # end
-  #
-  # # 1
-  # # nil
-  # # 3
-  # ```
-  def each
-    self.length.times do |i|
-      yield self[i]
-    end
+  def finalize
+    LibArrowGlib.g_object_unref(@to_unsafe)
   end
 
-  # Converts the elements of an `Arrow::Array` to a standard library
-  # Array.
-  #
-  # ## Examples
-  #
-  # ```
-  # a = Arrow::ArrayBuilder.build([1, nil, 3])
-  # i = Arrow::Int32Array.cast(a)
-  # i.to_a(Int32) # => [1, nil, 3]
-  # ```
-  def to_a(dtype : U.class) : ::Array(U | Nil) forall U
-    result = [] of U | Nil
-    each do |v|
-      result << v
-    end
-    result
+  def length : Int64
+    LibArrowGlib.garrow_array_get_length(@to_unsafe)
   end
 
-  # Returns an iterator through an `Arrow::Array`, as well as the
-  # number of elements stored in the `Arrow::Array`.  Used primarily to
-  # access the raw Crystal pointer associated with an `Arrow::Array`
-  #
-  # ## Examples
-  #
-  # ```crystal
-  # arr = Arrow::Int32Array.new [1, 2, 3]
-  # data, n = arr.values
-  # puts data.array[1] # => 2
-  # ```
-  def values
-    iterator = GObject::PointerIterator.new(Pointer(Int32).null) do |i|
-      i
-    end
-    {iterator, 0}
+  def null?(i : Int) : Bool
+    LibArrowGlib.garrow_array_is_null(@to_unsafe, i.to_i64)
   end
 end
 
-macro build_array_constructors
-  {% for dtype in [
-                    Int8,
-                    UInt8,
-                    Int16,
-                    UInt16,
-                    Int32,
-                    UInt32,
-                    Int64,
-                    UInt64,
-                    "Boolean",
-                    "Dictionary",
-                    Float,
-                    "Double",
-                    String,
-                    "Date32",
-                    "Date64",
-                    "Extension",
-                    "Null",
-                  ] %}
-    class Arrow::{{dtype.id}}Array
-      def self.new(ary : ::Array)
-        result = Arrow::ArrayBuilder.build(ary)
-        Arrow::{{dtype.id}}Array.cast(result)
-      end
-    end
-  {% end %}
+class Arrow::NumericArray < Arrow::Array
 end
 
-build_array_constructors
+{% for item in [
+  {"Int8", "Int8", "int8"},
+  {"UInt8", "UInt8", "uint8"},
+  {"Int16", "Int16", "int16"},
+  {"UInt16", "UInt16", "uint16"},
+  {"Int32", "Int32", "int32"},
+  {"UInt32", "UInt32", "uint32"},
+  {"Int64", "Int64", "int64"},
+  {"UInt64", "UInt64", "uint64"},
+  {"Float", "Float32", "float"},
+  {"Double", "Float64", "double"}
+] %}
+  class Arrow::{{item[0].id}}Array < Arrow::NumericArray
+    def initialize(length : Int64, buffer : Arrow::Buffer, null_bitmap : Arrow::Buffer?, null_count : Int64)
+      bitmap_ptr = null_bitmap ? null_bitmap.to_unsafe : Pointer(Void).null.as(LibArrowGlib::GArrowBuffer)
+      @to_unsafe = LibArrowGlib.garrow_{{item[2].id}}_array_new(length, buffer.to_unsafe, bitmap_ptr, null_count)
+    end
 
-class GObject::PointerIterator(T, V)
-  def to_unsafe
-    @array
+    def self.new(ary : ::Array({{item[1].id}}))
+      # Access raw buffer pointer from Crystal array pointer
+      bytes = Bytes.new(ary.to_unsafe.as(Pointer(UInt8)), ary.size * sizeof({{item[1].id}}))
+      buffer = Arrow::Buffer.new(bytes)
+      new(ary.size.to_i64, buffer, nil, 0_i64)
+    end
+
+    def value(i : Int) : {{item[1].id}}
+      raw_pointer[i]
+    end
+
+    def raw_pointer : Pointer({{item[1].id}})
+      length_ptr = 0_i64
+      LibArrowGlib.garrow_{{item[2].id}}_array_get_values(@to_unsafe, pointerof(length_ptr))
+    end
+
+    def values
+      {PointerWrapper.new(raw_pointer), length}
+    end
+  end
+{% end %}
+
+class Arrow::BooleanArray < Arrow::Array
+  def initialize(length : Int64, buffer : Arrow::Buffer, null_bitmap : Arrow::Buffer?, null_count : Int64)
+    @to_unsafe = Pointer(Void).null.as(LibArrowGlib::GArrowArray)
+    raise "BooleanArray construction is not supported"
+  end
+
+  def self.new(ary : ::Array)
+    raise "BooleanArray construction is not supported"
+  end
+end
+
+class Arrow::StringArray < Arrow::Array
+  def initialize(length : Int64, buffer : Arrow::Buffer, null_bitmap : Arrow::Buffer?, null_count : Int64)
+    @to_unsafe = Pointer(Void).null.as(LibArrowGlib::GArrowArray)
+    raise "StringArray construction is not supported"
+  end
+
+  def self.new(ary : ::Array)
+    raise "StringArray construction is not supported"
   end
 end

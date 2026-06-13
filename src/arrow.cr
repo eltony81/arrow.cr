@@ -1,8 +1,6 @@
-require "gobject"
-require_gobject "Arrow"
-
+require "./arrow/lib_arrow_glib"
 require "./api"
 
 module Arrow
-  VERSION = "0.1.0"
+  VERSION = "1.0.0"
 end
