@@ -41,5 +41,35 @@ lib LibArrowGlib
   fun garrow_float_array_new(length : Int64, data : GArrowBuffer, null_bitmap : GArrowBuffer, n_nulls : Int64) : GArrowArray
   fun garrow_double_array_new(length : Int64, data : GArrowBuffer, null_bitmap : GArrowBuffer, n_nulls : Int64) : GArrowArray
   fun garrow_boolean_array_new(length : Int64, data : GArrowBuffer, null_bitmap : GArrowBuffer, n_nulls : Int64) : GArrowArray
-  fun garrow_null_array_new(length : Int64) : GArrowArray
+  alias GArrowDataType = Void*
+  alias GArrowTensor = Void*
+
+  # DataType constructors
+  fun garrow_int8_data_type_new : GArrowDataType
+  fun garrow_uint8_data_type_new : GArrowDataType
+  fun garrow_int16_data_type_new : GArrowDataType
+  fun garrow_uint16_data_type_new : GArrowDataType
+  fun garrow_int32_data_type_new : GArrowDataType
+  fun garrow_uint32_data_type_new : GArrowDataType
+  fun garrow_int64_data_type_new : GArrowDataType
+  fun garrow_uint64_data_type_new : GArrowDataType
+  fun garrow_float_data_type_new : GArrowDataType
+  fun garrow_double_data_type_new : GArrowDataType
+  fun garrow_boolean_data_type_new : GArrowDataType
+
+  # Tensor creation
+  fun garrow_tensor_new(data_type : GArrowDataType, data : GArrowBuffer, shape : Int64*, n_dimensions : LibC::SizeT, strides : Int64*, n_strides : LibC::SizeT, dimension_names : UInt8**, n_dimension_names : LibC::SizeT) : GArrowTensor
+
+  # Tensor properties
+  fun garrow_tensor_get_value_data_type(tensor : GArrowTensor) : GArrowDataType
+  fun garrow_tensor_get_buffer(tensor : GArrowTensor) : GArrowBuffer
+  fun garrow_tensor_get_shape(tensor : GArrowTensor, n_dimensions : Int32*) : Int64*
+  fun garrow_tensor_get_strides(tensor : GArrowTensor, n_strides : Int32*) : Int64*
+  fun garrow_tensor_get_n_dimensions(tensor : GArrowTensor) : Int32
+  fun garrow_tensor_get_size(tensor : GArrowTensor) : Int64
+
+  # GArrowBuffer data access
+  fun garrow_buffer_get_data(buffer : GArrowBuffer) : Void*
+  fun g_bytes_get_data(bytes : Void*, size : LibC::SizeT*) : Void*
+  fun g_bytes_unref(bytes : Void*) : Void
 end

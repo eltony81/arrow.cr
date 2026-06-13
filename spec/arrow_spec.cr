@@ -43,4 +43,26 @@ describe Arrow do
     ptr[0].should eq(10)
     ptr[1].should eq(20)
   end
+
+  it "creates and queries GArrowTensor (multidimensional array)" do
+    shape = [2_i64, 3_i64]
+    strides = [12_i64, 4_i64] # 3 * 4 bytes, 4 bytes
+    ary = [10_i32, 20_i32, 30_i32, 40_i32, 50_i32, 60_i32]
+    
+    # Create buffer and dataType
+    bytes = Bytes.new(ary.to_unsafe.as(Pointer(UInt8)), ary.size * sizeof(Int32))
+    buffer = Arrow::Buffer.new(bytes)
+    dtype = Arrow::DataType.int32
+    
+    # Create tensor
+    tensor = Arrow::Tensor.new(dtype, buffer, shape, strides)
+    
+    tensor.ndim.should eq(2)
+    tensor.size.should eq(6)
+    tensor.shape.should eq(shape)
+    tensor.strides.should eq(strides)
+    
+    # check data type
+    tensor.value_data_type.should be_a(Arrow::DataType)
+  end
 end

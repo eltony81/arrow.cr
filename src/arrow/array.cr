@@ -18,6 +18,14 @@ class Arrow::Buffer
     @to_unsafe = LibArrowGlib.garrow_buffer_new(bytes.to_unsafe, bytes.bytesize.to_i64)
   end
 
+  def raw_pointer : Pointer(Void)
+    gbytes = LibArrowGlib.garrow_buffer_get_data(@to_unsafe)
+    size = LibC::SizeT.new(0)
+    ptr = LibArrowGlib.g_bytes_get_data(gbytes, pointerof(size))
+    LibArrowGlib.g_bytes_unref(gbytes)
+    ptr
+  end
+
   def finalize
     LibArrowGlib.g_object_unref(@to_unsafe)
   end
