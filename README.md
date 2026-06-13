@@ -1,6 +1,6 @@
-# arrow
+# arrow.cr
 
-TODO: Write a description here
+Crystal bindings for Apache Arrow, enabling efficient in-memory columnar data analytics.
 
 ## Installation
 
@@ -9,7 +9,7 @@ TODO: Write a description here
    ```yaml
    dependencies:
      arrow:
-       github: your-github-user/arrow
+       github: eltony81/arrow.cr
    ```
 
 2. Run `shards install`
@@ -20,15 +20,9 @@ TODO: Write a description here
 require "arrow"
 ```
 
-TODO: Write usage instructions here
-
-## Development
-
-TODO: Write development instructions here
-
 ## Contributing
 
-1. Fork it (<https://github.com/your-github-user/arrow/fork>)
+1. Fork it (<https://github.com/eltony81/arrow.cr/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
@@ -36,4 +30,5 @@ TODO: Write development instructions here
 
 ## Contributors
 
-- [your-name-here](https://github.com/your-github-user) - creator and maintainer
+- [Chris Zimmerman](https://github.com/christopherzimmerman) - creator
+- [eltony81](https://github.com/eltony81) - maintainer
