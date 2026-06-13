@@ -5,6 +5,6 @@ authors:
   - Chris Zimmerman <chris-zimmerman@live.com>
   - Crystal Data Contributors
 
-crystal: >= 1.0.0
+crystal: ">= 1.0.0"
 
 license: MIT
