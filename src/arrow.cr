@@ -4,7 +4,7 @@ require "./arrow/lib_arrow_flight_glib"
 require "./api"
 
 module Arrow
-  VERSION = "1.2.0"
+  VERSION = "1.3.0"
 
   def self.initialize_compute : Bool
     err = Pointer(Void).null.as(LibArrowGlib::GError)

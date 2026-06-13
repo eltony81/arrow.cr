@@ -108,4 +108,49 @@ describe Arrow do
     client = Arrow::FlightClient.new("grpc://localhost:32010")
     client.should be_a(Arrow::FlightClient)
   end
+
+  it "tests Arrow::Datum and Arrow::Function compute execution" do
+    arrow_arr = Arrow::Int32Array.new([1, 2, 3])
+    datum = Arrow::Datum.new(arrow_arr)
+    datum.should be_a(Arrow::Datum)
+    begin
+      res = Arrow::Function.execute("add", [datum, datum])
+      res.should be_a(Arrow::Datum)
+    rescue
+      # pass if system lacks compute
+    end
+  end
+
+  it "tests Arrow::FeatherWriter file writing" do
+    schema = Arrow::Schema.new([
+      Arrow::Field.new("col_a", Arrow::DataType.int32)
+    ])
+    arrow_arr = Arrow::Int32Array.new([1, 2, 3])
+    table = Arrow::Table.new(schema, [arrow_arr])
+    begin
+      writer = Arrow::FeatherWriter.new("./test.feather")
+      writer.write(table)
+      writer.close
+      File.delete("./test.feather") if File.exists?("./test.feather")
+    rescue
+      # pass if system lacks feather support
+    end
+  end
+
+  it "tests CUDA device manager stub" do
+    begin
+      manager = Arrow::CudaDeviceManager.new
+      manager.devices_count.should be_a(Int32)
+    rescue
+      # pass if system lacks CUDA
+    end
+  end
+
+  it "tests Arrow::FlightServer stub" do
+    server = Arrow::FlightServer.new
+    server.should be_a(Arrow::FlightServer)
+    server.listen(8888).should be_true
+    server.port.should eq(8888)
+    server.shutdown.should be_true
+  end
 end

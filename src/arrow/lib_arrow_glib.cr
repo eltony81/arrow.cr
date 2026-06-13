@@ -93,4 +93,27 @@ lib LibArrowGlib
 
   # Compute functions
   fun garrow_compute_initialize(error : GError*) : Bool
+
+  alias GArrowDatum = Void*
+  alias GArrowFunction = Void*
+  alias GArrowFunctionOptions = Void*
+  alias GArrowExecuteContext = Void*
+  alias GArrowFeatherFileWriter = Void*
+
+  # Datum constructors and functions
+  fun garrow_array_datum_new(array : GArrowArray) : GArrowDatum
+  fun garrow_datum_is_array(datum : GArrowDatum) : Bool
+  fun garrow_table_datum_new(table : GArrowTable) : GArrowDatum
+
+  # Compute Functions
+  fun garrow_function_find(name : UInt8*) : GArrowFunction
+  fun garrow_function_execute(function : GArrowFunction, args : Void*, options : GArrowFunctionOptions, context : GArrowExecuteContext, error : GError*) : GArrowDatum
+
+  # GLib object property getter
+  fun g_object_get(object : Void*, first_property_name : UInt8*, value_ptr : Void*, null_ptr : Void*) : Void
+
+  # Feather File I/O
+  fun garrow_feather_file_writer_new_path(path : UInt8*, error : GError*) : GArrowFeatherFileWriter
+  fun garrow_feather_file_writer_write(writer : GArrowFeatherFileWriter, table : GArrowTable, error : GError*) : Bool
+  fun garrow_feather_file_writer_close(writer : GArrowFeatherFileWriter, error : GError*) : Bool
 end

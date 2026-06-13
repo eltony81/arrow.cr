@@ -1,4 +1,8 @@
+require "./arrow/lib_arrow_cuda_glib"
 require "./arrow/array"
 require "./arrow/tensor"
 require "./arrow/parquet"
 require "./arrow/flight"
+require "./arrow/compute"
+require "./arrow/feather"
+require "./arrow/cuda"
