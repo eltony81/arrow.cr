@@ -8,6 +8,7 @@ lib LibArrowGlib
 
   # GLib/GObject functions for memory management
   fun g_object_unref(object : Void*) : Void
+  fun g_object_ref(object : Void*) : Void*
 
   # Buffer creation
   fun garrow_buffer_new(data : UInt8*, size : Int64) : GArrowBuffer

@@ -58,9 +58,21 @@ end
   {"Double", "Float64", "double"}
 ] %}
   class Arrow::{{item[0].id}}Array < Arrow::NumericArray
+    @raw_pointer : Pointer({{item[1].id}})
+
+    def initialize(@to_unsafe : LibArrowGlib::GArrowArray, add_ref = false)
+      if add_ref
+        LibArrowGlib.g_object_ref(@to_unsafe)
+      end
+      length_ptr = 0_i64
+      @raw_pointer = LibArrowGlib.garrow_{{item[2].id}}_array_get_values(@to_unsafe, pointerof(length_ptr))
+    end
+
     def initialize(length : Int64, buffer : Arrow::Buffer, null_bitmap : Arrow::Buffer?, null_count : Int64)
       bitmap_ptr = null_bitmap ? null_bitmap.to_unsafe : Pointer(Void).null.as(LibArrowGlib::GArrowBuffer)
       @to_unsafe = LibArrowGlib.garrow_{{item[2].id}}_array_new(length, buffer.to_unsafe, bitmap_ptr, null_count)
+      length_ptr = 0_i64
+      @raw_pointer = LibArrowGlib.garrow_{{item[2].id}}_array_get_values(@to_unsafe, pointerof(length_ptr))
     end
 
     def self.new(ary : ::Array({{item[1].id}}))
@@ -71,16 +83,15 @@ end
     end
 
     def value(i : Int) : {{item[1].id}}
-      raw_pointer[i]
+      @raw_pointer[i]
     end
 
     def raw_pointer : Pointer({{item[1].id}})
-      length_ptr = 0_i64
-      LibArrowGlib.garrow_{{item[2].id}}_array_get_values(@to_unsafe, pointerof(length_ptr))
+      @raw_pointer
     end
 
     def values
-      {PointerWrapper.new(raw_pointer), length}
+      {PointerWrapper.new(@raw_pointer), length}
     end
   end
 {% end %}
