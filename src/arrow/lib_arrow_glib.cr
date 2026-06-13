@@ -72,4 +72,25 @@ lib LibArrowGlib
   fun garrow_buffer_get_data(buffer : GArrowBuffer) : Void*
   fun g_bytes_get_data(bytes : Void*, size : LibC::SizeT*) : Void*
   fun g_bytes_unref(bytes : Void*) : Void
+
+  alias GArrowField = Void*
+  alias GArrowSchema = Void*
+  alias GArrowTable = Void*
+  alias GError = Void*
+
+  # GLib list helpers
+  fun g_list_append(list : Void*, data : Void*) : Void*
+  fun g_list_free(list : Void*) : Void
+
+  # C Data Interface
+  fun garrow_array_import(c_abi_array : Void*, data_type : GArrowDataType, error : GError*) : GArrowArray
+  fun garrow_array_export(array : GArrowArray, c_abi_array : Void**, c_abi_schema : Void**, error : GError*) : Bool
+
+  # Field, Schema, Table
+  fun garrow_field_new(name : UInt8*, data_type : GArrowDataType) : GArrowField
+  fun garrow_schema_new(fields : Void*) : GArrowSchema
+  fun garrow_table_new_arrays(schema : GArrowSchema, arrays : GArrowArray*, n_arrays : LibC::SizeT, error : GError*) : GArrowTable
+
+  # Compute functions
+  fun garrow_compute_initialize(error : GError*) : Bool
 end

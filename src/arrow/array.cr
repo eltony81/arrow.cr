@@ -48,6 +48,24 @@ class Arrow::Array
   def null?(i : Int) : Bool
     LibArrowGlib.garrow_array_is_null(@to_unsafe, i.to_i64)
   end
+
+  def self.import(c_abi_array : Void*, dtype : Arrow::DataType) : Arrow::Array
+    err = Pointer(Void).null.as(LibArrowGlib::GError)
+    res = LibArrowGlib.garrow_array_import(c_abi_array, dtype.to_unsafe, pointerof(err))
+    if !err.nil?
+      raise "Failed to import Arrow array via C Data ABI"
+    end
+    Arrow::Array.new(res)
+  end
+
+  def export(c_abi_array : Void**, c_abi_schema : Void**) : Bool
+    err = Pointer(Void).null.as(LibArrowGlib::GError)
+    res = LibArrowGlib.garrow_array_export(to_unsafe, c_abi_array, c_abi_schema, pointerof(err))
+    if !err.nil?
+      raise "Failed to export Arrow array via C Data ABI"
+    end
+    res
+  end
 end
 
 class Arrow::NumericArray < Arrow::Array
